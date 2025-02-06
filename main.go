@@ -50,17 +50,18 @@ type ModemService struct {
 	redis          *redis.Client
 	logger         *log.Logger
 	lastModemState ModemState
+	version        string
 }
 
-func NewModemService(cfg Config) *ModemService {
+func NewModemService(cfg Config, version string) *ModemService {
 	redis := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%d", cfg.redisHost, cfg.redisPort),
 	})
 
-	return &ModemService{
+	service := &ModemService{
 		cfg:    cfg,
 		redis:  redis,
-		logger: log.New(os.Stdout, "rescoot-modem: ", log.LstdFlags),
+		logger: log.New(os.Stdout, "rescoot-modem ", log.LstdFlags),
 		lastModemState: ModemState{
 			status:        ModemStateDefault,
 			accessTech:    AccessTechDefault,
@@ -69,7 +70,12 @@ func NewModemService(cfg Config) *ModemService {
 			ifIpAddr:      "UNKNOWN",
 			registration:  "",
 		},
+		version: version,
 	}
+
+	service.logger.Printf("rescoot-modem v%s", version)
+
+	return service
 }
 
 func (m *ModemService) findModemId() (string, error) {
@@ -296,6 +302,8 @@ func (m *ModemService) Run(ctx context.Context) error {
 	return nil
 }
 
+var version string
+
 func main() {
 	cfg := Config{}
 	flag.StringVar(&cfg.redisHost, "redis-host", "localhost", "Redis host")
@@ -308,7 +316,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	service := NewModemService(cfg)
+	service := NewModemService(cfg, version)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
