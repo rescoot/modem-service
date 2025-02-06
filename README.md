@@ -18,6 +18,15 @@ It is a free and open replacement for the `unu-modem` service on unu's Scooter P
 - ModemManager (`mmcli`)
 - Redis
 
+## Building / Installing
+
+Assuming your mdb is connected via USB Ethernet as 192.168.7.1 and aliased as `mdb`;
+
+```bash
+make dist
+scp rescoot-modem-arm-dist root@mdb:/usr/bin/rescoot-modem
+```
+
 ## Configuration
 
 The service supports the following command-line flags:
